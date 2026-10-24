@@ -23,7 +23,7 @@ static CGFloat const RTLCDiameter = 58.0; // Button diameter in points.
 static BOOL const RTLCConfirmReturn = NO; // Set to NO to return immediately on tap.
 static CGFloat const RTLCMargin = 10.0; // Gap between the button and safe-area edges in points.
 static NSTimeInterval const RTLCFadeDelay = 3.0; // Seconds of inactivity before the button fades.
-static CGFloat const RTLCIdleAlpha = 0.20; // Idle opacity from 0.0 (invisible) to 1.0 (fully opaque).
+static CGFloat const RTLCIdleAlpha = 1.0; // No idle fade: the button keeps its full color when untouched.
 static CGFloat const RTLCActiveAlpha = 1.0; // Active opacity from 0.0 (invisible) to 1.0 (fully opaque).
 static CGFloat const RTLCDragThreshold = 8.0; // Distance in points before a tap becomes a drag.
 
@@ -151,7 +151,7 @@ static CGFloat const RTLCDragThreshold = 8.0; // Distance in points before a tap
 @property(nonatomic, assign) CGFloat positionYFraction;
 @property(nonatomic, assign) UIEdgeInsets positionSafeAreaInsets;
 - (void)setAlpha:(CGFloat)alpha animated:(BOOL)animated;
-- (void)updateBorderColor;
+- (void)updateAdaptiveColors;
 - (void)restorePosition;
 - (void)snapToNearestEdgeAnimated:(BOOL)animated;
 @end
@@ -240,7 +240,6 @@ static CGFloat const RTLCDragThreshold = 8.0; // Distance in points before a tap
 
     self.layer.cornerRadius = RTLCDiameter / 2.0;
     self.layer.borderWidth = 1.0;
-    [self updateBorderColor];
     self.layer.shadowColor = UIColor.blackColor.CGColor;
     self.layer.shadowOpacity = 0.28;
     self.layer.shadowRadius = 8.0;
@@ -261,7 +260,7 @@ static CGFloat const RTLCDragThreshold = 8.0; // Distance in points before a tap
     self.iconView.frame = CGRectInset(self.bounds, 15.0, 15.0);
     self.iconView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
     self.iconView.contentMode = UIViewContentModeScaleAspectFit;
-    self.iconView.tintColor = UIColor.whiteColor;
+    [self updateAdaptiveColors];
     self.iconView.userInteractionEnabled = NO;
     self.iconView.layer.shadowColor = UIColor.blackColor.CGColor;
     self.iconView.layer.shadowOpacity = 0.35;
@@ -290,18 +289,20 @@ static CGFloat const RTLCDragThreshold = 8.0; // Distance in points before a tap
     self.iconView.frame = CGRectInset(self.bounds, 15.0, 15.0);
 }
 
-- (void)updateBorderColor {
-    // CALayer borderColor is a resolved CGColor, so refresh it whenever the
-    // interface style changes instead of assigning a fixed white border.
+- (void)updateAdaptiveColors {
+    // CALayer borderColor is a resolved CGColor and the template icon takes
+    // its color from tintColor, so refresh both whenever the interface
+    // style changes instead of fixing them to white.
     BOOL dark = self.traitCollection.userInterfaceStyle == UIUserInterfaceStyleDark;
     self.layer.borderColor = (dark ? [UIColor colorWithWhite:1.0 alpha:0.55]
                                    : [UIColor colorWithWhite:0.0 alpha:0.55]).CGColor;
+    self.iconView.tintColor = dark ? UIColor.whiteColor : UIColor.blackColor;
 }
 
 - (void)traitCollectionDidChange:(UITraitCollection *)previousTraitCollection {
     [super traitCollectionDidChange:previousTraitCollection];
     if (self.traitCollection.userInterfaceStyle != previousTraitCollection.userInterfaceStyle) {
-        [self updateBorderColor];
+        [self updateAdaptiveColors];
     }
 }
 
