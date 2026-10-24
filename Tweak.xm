@@ -151,6 +151,7 @@ static CGFloat const RTLCDragThreshold = 8.0; // Distance in points before a tap
 @property(nonatomic, assign) CGFloat positionYFraction;
 @property(nonatomic, assign) UIEdgeInsets positionSafeAreaInsets;
 - (void)setAlpha:(CGFloat)alpha animated:(BOOL)animated;
+- (void)updateBorderColor;
 - (void)restorePosition;
 - (void)snapToNearestEdgeAnimated:(BOOL)animated;
 @end
@@ -239,7 +240,7 @@ static CGFloat const RTLCDragThreshold = 8.0; // Distance in points before a tap
 
     self.layer.cornerRadius = RTLCDiameter / 2.0;
     self.layer.borderWidth = 1.0;
-    self.layer.borderColor = [UIColor colorWithWhite:1.0 alpha:0.55].CGColor;
+    [self updateBorderColor];
     self.layer.shadowColor = UIColor.blackColor.CGColor;
     self.layer.shadowOpacity = 0.28;
     self.layer.shadowRadius = 8.0;
@@ -287,6 +288,21 @@ static CGFloat const RTLCDragThreshold = 8.0; // Distance in points before a tap
         }
     }
     self.iconView.frame = CGRectInset(self.bounds, 15.0, 15.0);
+}
+
+- (void)updateBorderColor {
+    // CALayer borderColor is a resolved CGColor, so refresh it whenever the
+    // interface style changes instead of assigning a fixed white border.
+    BOOL dark = self.traitCollection.userInterfaceStyle == UIUserInterfaceStyleDark;
+    self.layer.borderColor = (dark ? [UIColor colorWithWhite:1.0 alpha:0.55]
+                                   : [UIColor colorWithWhite:0.0 alpha:0.55]).CGColor;
+}
+
+- (void)traitCollectionDidChange:(UITraitCollection *)previousTraitCollection {
+    [super traitCollectionDidChange:previousTraitCollection];
+    if (self.traitCollection.userInterfaceStyle != previousTraitCollection.userInterfaceStyle) {
+        [self updateBorderColor];
+    }
 }
 
 - (void)buttonTouchDown:(UIButton *)sender {
