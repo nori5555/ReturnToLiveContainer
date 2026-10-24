@@ -20,7 +20,7 @@
 #pragma mark - Configuration
 
 static CGFloat const RTLCDiameter = 58.0; // Button diameter in points.
-static BOOL const RTLCConfirmReturn = YES; // Set to NO to return immediately on tap.
+static BOOL const RTLCConfirmReturn = NO; // Set to NO to return immediately on tap.
 static CGFloat const RTLCMargin = 10.0; // Gap between the button and safe-area edges in points.
 static NSTimeInterval const RTLCFadeDelay = 3.0; // Seconds of inactivity before the button fades.
 static CGFloat const RTLCIdleAlpha = 0.20; // Idle opacity from 0.0 (invisible) to 1.0 (fully opaque).
