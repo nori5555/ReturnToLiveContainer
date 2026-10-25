@@ -19,7 +19,7 @@
 
 #pragma mark - Configuration
 
-static CGFloat const RTLCDiameter = 58.0; // Button diameter in points.
+static CGFloat const RTLCDiameter = 48.0; // Button diameter in points.
 static BOOL const RTLCConfirmReturn = NO; // Set to NO to return immediately on tap.
 static CGFloat const RTLCMargin = 10.0; // Gap between the button and safe-area edges in points.
 static NSTimeInterval const RTLCFadeDelay = 3.0; // Seconds of inactivity before the button fades.
@@ -257,7 +257,7 @@ static CGFloat const RTLCDragThreshold = 8.0; // Distance in points before a tap
     // Keep the symbol outside UIVisualEffectView. UIKit otherwise composites the
     // button image into the glass material on some guest apps, making it blurry.
     self.iconView = [[UIImageView alloc] initWithImage:[image imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate]];
-    self.iconView.frame = CGRectInset(self.bounds, 15.0, 15.0);
+    self.iconView.frame = CGRectInset(self.bounds, 12.0, 12.0);
     self.iconView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
     self.iconView.contentMode = UIViewContentModeScaleAspectFit;
     [self updateAdaptiveColors];
@@ -286,7 +286,7 @@ static CGFloat const RTLCDragThreshold = 8.0; // Distance in points before a tap
             view.layer.cornerRadius = self.bounds.size.width / 2.0;
         }
     }
-    self.iconView.frame = CGRectInset(self.bounds, 15.0, 15.0);
+    self.iconView.frame = CGRectInset(self.bounds, 12.0, 12.0);
 }
 
 - (void)updateAdaptiveColors {
