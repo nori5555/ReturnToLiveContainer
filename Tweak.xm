@@ -3,6 +3,7 @@
 #import <QuartzCore/QuartzCore.h>
 #import <dlfcn.h>
 #import <math.h>
+#import <mach-o/dyld.h>
 
 #pragma mark - LiveContainer bridge
 
@@ -760,6 +761,30 @@ static UIWindowScene *rtlcActiveWindowScene(void) {
     return nil;
 }
 
+// Multitask guests run inside the LiveProcess app extension, not as standalone guest apps.
+// LiveContainer overwrites NSBundle mainBundle to the guest bundle before tweaks load,
+// so mainBundle cannot tell them apart. Dyld image list still holds the original executable.
+// Fallback is extension data containers under PluginKitPlugin, which guest containers never use.
+static BOOL rtlcIsMultitaskGuest(void) {
+    const char *execPath = _dyld_get_image_name(0);
+    if (execPath) {
+        NSString *exec = [NSString stringWithUTF8String:execPath];
+        if ([exec containsString:@"LiveProcess.appex"]) return YES;
+    }
+    NSDictionary *env = NSProcessInfo.processInfo.environment;
+    NSString *lpHome = env[@"LP_HOME_PATH"];
+    if (lpHome && [lpHome containsString:@"PluginKitPlugin"]) return YES;
+    NSString *home = env[@"HOME"];
+    if (home && [home containsString:@"PluginKitPlugin"]) return YES;
+    return NO;
+}
+
+// SideStore runs inside LiveProcess too, but fullscreen, not a multitask window, so it keeps the button.
+static BOOL rtlcIsSideStoreGuest(void) {
+    id selected = [[NSUserDefaults standardUserDefaults] objectForKey:@"selected"];
+    return [selected isKindOfClass:NSString.class] && [selected isEqualToString:@"builtinSideStore"];
+}
+
 static void rtlcInstallOverlay(void) {
     dispatch_async(dispatch_get_main_queue(), ^{
         if (rtlOverlayWindow) return;
@@ -767,6 +792,16 @@ static void rtlcInstallOverlay(void) {
         // Do not inject into LiveContainer's own UI if the tweak is ever loaded there.
         if ([NSUserDefaults respondsToSelector:@selector(isLiveProcess)] &&
             [NSUserDefaults isLiveProcess]) {
+            return;
+        }
+        // Fallback host check if isLiveProcess is ever missing: host-only UI classes never exist in guest processes.
+        if (NSClassFromString(@"DecoratedAppSceneViewController") || NSClassFromString(@"LCAppBannerViewController") || NSClassFromString(@"MultitaskDockManager")) {
+            return;
+        }
+        // Only normally-launched guest apps get the Return button.
+        // Multitask windows already have MultitaskFloat pill to go back, so a Return overlay there would only overlap it.
+        // SideStore runs inside LiveProcess too, but fullscreen, not a multitask window, so it keeps the button.
+        if (rtlcIsMultitaskGuest() && !rtlcIsSideStoreGuest()) {
             return;
         }
 
